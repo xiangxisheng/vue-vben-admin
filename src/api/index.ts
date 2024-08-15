@@ -4,14 +4,19 @@ import { ErrorMessageMode } from '#/axios';
 /**
  * @description: 通用API请求接口
  */
-export async function Api(url:string, params: Record<string, unknown>, mode: ErrorMessageMode = 'modal') {
+export async function Api(
+  url: string,
+  params: Record<string, unknown>,
+  mode: ErrorMessageMode = 'modal',
+) {
   return await defHttp.post(
     {
       url,
       params,
     },
     {
-      errorMessageMode: mode,
+      errorMessageMode: 'modal',
+      successMessageMode: 'modal',
     },
   );
 }

@@ -93,8 +93,7 @@
   import { useLoginState, useFormRules, useFormValid, LoginStateEnum } from './useLogin';
   import { Api } from '@/api';
   import { useMessage } from '@/hooks/web/useMessage';
-  const { createSuccessModal } = useMessage();
-
+  const { createSuccessModal, createErrorModal } = useMessage();
 
   const FormItem = Form.Item;
   const InputPassword = Input.Password;
@@ -123,6 +122,21 @@
   async function handleRegister() {
     const data = await validForm();
     if (!data) return;
+    try {
+      loading.value = true;
+      const result = await Api('/email-register', {
+        email: formData.email,
+        otp: formData.otp,
+        password: formData.password,
+      });
+      console.log(result);
+    } catch (error) {
+      console.error(error);
+      return;
+    } finally {
+      loading.value = false;
+    }
+    return true;
     console.log(data);
   }
 
@@ -136,11 +150,11 @@
     }
     try {
       loading.value = true;
-      const res = await Api('/email-otp', {
+      const result = await Api('/email-otp', {
+        action: 'register',
         email: formData.email,
       });
-      console.log(res);
-      createSuccessModal({ title: 'Tip', content: 'content message...' });
+      console.log(result);
     } catch (error) {
       console.error(error);
       return;
