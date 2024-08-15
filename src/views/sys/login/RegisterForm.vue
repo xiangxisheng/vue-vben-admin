@@ -2,7 +2,7 @@
   <div v-if="getShow">
     <LoginFormTitle class="enter-x" />
     <Form class="p-4 enter-x" :model="formData" :rules="getFormRules" ref="formRef">
-      <FormItem name="account" class="enter-x">
+      <FormItem v-if="0" name="account" class="enter-x">
         <Input
           class="fix-auto-fill"
           size="large"
@@ -10,7 +10,25 @@
           :placeholder="t('sys.login.userName')"
         />
       </FormItem>
-      <FormItem name="mobile" class="enter-x">
+      <FormItem name="email" class="enter-x">
+        <Input
+          size="large"
+          v-model:value="formData.email"
+          :placeholder="t('sys.login.email')"
+          class="fix-auto-fill"
+        />
+      </FormItem>
+      <FormItem name="otp" class="enter-x">
+        <CountdownInput
+          size="large"
+          class="fix-auto-fill"
+          v-model:value="formData.otp"
+          :placeholder="t('sys.login.otpPlaceholder')"
+          :count="10"
+          :sendCodeApi="handleSendCodeApi"
+        />
+      </FormItem>
+      <FormItem v-if="0" name="mobile" class="enter-x">
         <Input
           size="large"
           v-model:value="formData.mobile"
@@ -18,7 +36,7 @@
           class="fix-auto-fill"
         />
       </FormItem>
-      <FormItem name="sms" class="enter-x">
+      <FormItem v-if="0" name="sms" class="enter-x">
         <CountdownInput
           size="large"
           class="fix-auto-fill"
@@ -42,7 +60,7 @@
         />
       </FormItem>
 
-      <FormItem class="enter-x" name="policy">
+      <FormItem v-if="0" class="enter-x" name="policy">
         <!-- No logic, you need to deal with it yourself -->
         <Checkbox v-model:checked="formData.policy" size="small">
           {{ t('sys.login.policy') }}
@@ -73,6 +91,10 @@
   import { CountdownInput } from '@/components/CountDown';
   import { useI18n } from '@/hooks/web/useI18n';
   import { useLoginState, useFormRules, useFormValid, LoginStateEnum } from './useLogin';
+  import { Api } from '@/api';
+  import { useMessage } from '@/hooks/web/useMessage';
+  const { createSuccessModal } = useMessage();
+
 
   const FormItem = Form.Item;
   const InputPassword = Input.Password;
@@ -86,6 +108,8 @@
     account: '',
     password: '',
     confirmPassword: '',
+    email: '',
+    otp: '',
     mobile: '',
     sms: '',
     policy: false,
@@ -100,5 +124,29 @@
     const data = await validForm();
     if (!data) return;
     console.log(data);
+  }
+
+  async function handleSendCodeApi() {
+    if (!formData.email) {
+      createErrorModal({
+        title: t('sys.api.errorTip'),
+        content: '请先填写E-mail邮箱',
+      });
+      return;
+    }
+    try {
+      loading.value = true;
+      const res = await Api('/email-otp', {
+        email: formData.email,
+      });
+      console.log(res);
+      createSuccessModal({ title: 'Tip', content: 'content message...' });
+    } catch (error) {
+      console.error(error);
+      return;
+    } finally {
+      loading.value = false;
+    }
+    return true;
   }
 </script>

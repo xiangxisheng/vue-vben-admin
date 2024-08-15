@@ -55,6 +55,8 @@ export function useFormRules(formData?: Recordable) {
 
   const getAccountFormRule = computed(() => createRule(t('sys.login.accountPlaceholder')));
   const getPasswordFormRule = computed(() => createRule(t('sys.login.passwordPlaceholder')));
+  const getEmailFormRule = computed(() => createRule(t('sys.login.emailPlaceholder')));
+  const getOtpFormRule = computed(() => createRule(t('sys.login.otpPlaceholder')));
   const getSmsFormRule = computed(() => createRule(t('sys.login.smsPlaceholder')));
   const getMobileFormRule = computed(() => createRule(t('sys.login.mobilePlaceholder')));
 
@@ -77,12 +79,18 @@ export function useFormRules(formData?: Recordable) {
   const getFormRules = computed((): { [k: string]: ValidationRule | ValidationRule[] } => {
     const accountFormRule = unref(getAccountFormRule);
     const passwordFormRule = unref(getPasswordFormRule);
+    const emailFormRule = unref(getEmailFormRule);
+    const otpFormRule = unref(getOtpFormRule);
     const smsFormRule = unref(getSmsFormRule);
     const mobileFormRule = unref(getMobileFormRule);
 
     const mobileRule = {
       sms: smsFormRule,
       mobile: mobileFormRule,
+    };
+    const emailRule = {
+      email: emailFormRule,
+      otp: otpFormRule,
     };
     switch (unref(currentState)) {
       // register form rules
@@ -95,6 +103,7 @@ export function useFormRules(formData?: Recordable) {
           ],
           policy: [{ validator: validatePolicy, trigger: 'change' }],
           ...mobileRule,
+          ...emailRule,
         };
 
       // reset password form rules
@@ -102,11 +111,15 @@ export function useFormRules(formData?: Recordable) {
         return {
           account: accountFormRule,
           ...mobileRule,
+          ...emailRule,
         };
 
       // mobile form rules
       case LoginStateEnum.MOBILE:
-        return mobileRule;
+        return {
+          ...mobileRule,
+          ...emailRule,
+        };
 
       // login form rules
       default:
