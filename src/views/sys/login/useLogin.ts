@@ -70,6 +70,7 @@ export function useFormRules(formData?: Recordable) {
         return Promise.reject(t('sys.login.passwordPlaceholder'));
       }
       if (value !== password) {
+        console.log('validateConfirmPassword:', value, password);
         return Promise.reject(t('sys.login.diffPwd'));
       }
       return Promise.resolve();
@@ -90,7 +91,7 @@ export function useFormRules(formData?: Recordable) {
     };
     const emailRule = {
       email: emailFormRule,
-      otp: otpFormRule,
+      otp_code: otpFormRule,
     };
     switch (unref(currentState)) {
       // register form rules
@@ -110,6 +111,10 @@ export function useFormRules(formData?: Recordable) {
       case LoginStateEnum.RESET_PASSWORD:
         return {
           account: accountFormRule,
+          password: passwordFormRule,
+          confirmPassword: [
+            { validator: validateConfirmPassword(formData?.password), trigger: 'change' },
+          ],
           ...mobileRule,
           ...emailRule,
         };

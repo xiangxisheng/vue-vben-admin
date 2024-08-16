@@ -18,11 +18,11 @@
           class="fix-auto-fill"
         />
       </FormItem>
-      <FormItem name="otp" class="enter-x">
+      <FormItem name="otp_code" class="enter-x">
         <CountdownInput
           size="large"
           class="fix-auto-fill"
-          v-model:value="formData.otp"
+          v-model:value="formData.otp_code"
           :placeholder="t('sys.login.otpPlaceholder')"
           :count="10"
           :sendCodeApi="handleSendCodeApi"
@@ -104,13 +104,13 @@
   const loading = ref(false);
 
   const formData = reactive({
-    account: '',
+    //account: '',
+    email: '',
+    otp_code: '',
     password: '',
     confirmPassword: '',
-    email: '',
-    otp: '',
-    mobile: '',
-    sms: '',
+    //mobile: '',
+    //sms: '',
     policy: false,
   });
 
@@ -126,7 +126,7 @@
       loading.value = true;
       const result = await Api('/email-register', {
         email: formData.email,
-        otp: formData.otp,
+        otp_code: formData.otp_code,
         password: formData.password,
       });
       console.log(result);
