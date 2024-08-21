@@ -247,6 +247,11 @@ export const usePermissionStore = defineStore({
           // 动态引入组件
           routeList = transformObjToRoute(routeList);
 
+          // 对非一级路由进行过滤
+          routeList = filter(routeList, routeFilter);
+          // 对一级路由再次根据角色权限过滤
+          routeList = routeList.filter(routeFilter);
+
           //  Background routing to menu structure
           //  后台路由到菜单结构
           const backMenuList = transformRouteToMenu(routeList);
