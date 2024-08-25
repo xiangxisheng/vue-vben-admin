@@ -124,7 +124,7 @@
     if (!data) return;
     try {
       loading.value = true;
-      const result = await Api('/email-register', {
+      const result = await Api('/public/email/register', {
         email: formData.email,
         otp_code: formData.otp_code,
         password: formData.password,
@@ -150,7 +150,7 @@
     }
     try {
       loading.value = true;
-      const result = await Api('/email-otp', {
+      const result = await Api('/public/email/otp', {
         action: 'register',
         email: formData.email,
       });
