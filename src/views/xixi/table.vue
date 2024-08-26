@@ -46,7 +46,7 @@
   } from '/@/components/Table';
   import TableTitle from '/@/components/Table/src/components/TableTitle.vue';
   import { useModal } from '/@/components/Modal';
-  import XixiModal from './XixiModal.vue';
+  import XixiModal from './modal.vue';
   import { jsonToSheetXlsx, ExpExcelModal, ExportModalResult } from '/@/components/Excel';
 
   // 3: 导入Vben其他
@@ -65,9 +65,9 @@
     // API-CRUD
     const url = '/panel' + urlpre;
     return {
-      info: () => defHttp.get({ url, params: { a: 'info' } }),
+      info: () => defHttp.get({ url: `${url}/info` }),
       add: (params: any) => defHttp.post({ url: `${url}/add`, params }),
-      list: (params?: any) => defHttp.get({ url, params }),
+      list: (params?: any) => defHttp.get({ url: `${url}/list`, params }),
       save: (id: number, params: any) => defHttp.post({ url: `${url}/${id}/save`, params }),
       del: (id: number) => defHttp.post({ url: `${url}/${id}/del` }),
       action: (action: string, params: any) => defHttp.post({ url: `${url}/${action}`, params }),
