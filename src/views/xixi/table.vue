@@ -40,7 +40,6 @@
   // 1: 导入vue内置组件
   import { defineComponent, h, ref, reactive } from 'vue';
   import { useRouter } from 'vue-router';
-  import { Progress, Tag } from 'ant-design-vue';
 
   // 2: 导入Vben组件
   import {
@@ -59,29 +58,15 @@
   import XixiDrawer from './drawer.vue';
 
   // 3: 导入Vben其他
-  import { defHttp } from '/@/utils/http/axios';
   import { useMessage } from '/@/hooks/web/useMessage';
   import { deepMerge } from '/@/utils';
+  import { fGetInfo, fTableMgrApi } from './table.ts';
 
   // 4: 自定义类型
   interface TableConfigToolbar {
     title: string;
     click: Function;
   }
-
-  // 5: 自定义API
-  const fTableMgrApi = (urlpre: string) => {
-    // API-CRUD
-    const url = '/panel' + urlpre;
-    return {
-      info: () => defHttp.get({ url: `${url}/info` }),
-      add: (params: any) => defHttp.post({ url: `${url}/add`, params }),
-      list: (params?: any) => defHttp.get({ url: `${url}/list`, params }),
-      save: (id: number, params: any) => defHttp.post({ url: `${url}/${id}/save`, params }),
-      del: (id: number) => defHttp.post({ url: `${url}/${id}/del` }),
-      action: (action: string, params: any) => defHttp.post({ url: `${url}/${action}`, params }),
-    };
-  };
 
   // 6: 最后导出组件
   export default defineComponent({
@@ -198,132 +183,6 @@
           }
         }
       };
-      const checkRecordByWhere = (record: any, where: any) => {
-        for (const k in where) {
-          if (record[k] !== where[k]) {
-            return false;
-          }
-        }
-        return true;
-      };
-      // 加载表格信息
-      const fLoadInfo = async () => {
-        createMessage.loading({
-          content: `正在加载Info`,
-          key: 'fLoadInfo',
-          duration: 0,
-        });
-        const info = await fTableMgrApi(path).info();
-        const props: Partial<BasicTableProps> = {};
-        props.api = fTableMgrApi(path).list;
-        for (const k in info.basic_table_props) {
-          props[k] = info.basic_table_props[k];
-        }
-        if (info.basic_table_props.useSearchForm) {
-          if (!props.formConfig) {
-            // 提供默认的搜索设置
-            props.formConfig = {
-              labelWidth: 120,
-              autoSubmitOnEnter: true,
-            };
-          }
-          props.formConfig.schemas = ((columns) => {
-            const schemas: FormSchema[] = [];
-            for (const column of columns) {
-              if (column.component) {
-                const schema: FormSchema = {
-                  field: column.dataIndex,
-                  label: column.title,
-                  component: column.component,
-                };
-                if (column.componentProps) {
-                  schema.componentProps = column.componentProps;
-                }
-                schema.colProps = { span: 8 };
-                if (column.colProps) {
-                  schema.colProps = column.colProps;
-                }
-                schemas.push(schema);
-              }
-            }
-            return schemas;
-          })(info.columns);
-          props.useSearchForm = true;
-        }
-        const fGetColumns = (columns: any[]) => {
-          // 从接口中返回的“列配置”中，取得列的设置
-          const aRet: BasicColumn[] = [];
-          for (const column of columns) {
-            if (!column.width) {
-              // 没有宽度的列不显示
-              continue;
-            }
-            const mColumn: BasicColumn = {
-              title: column.title,
-              dataIndex: column.dataIndex,
-            };
-            if (column.width) {
-              mColumn.width = column.width;
-            }
-            if (column.sorter) {
-              mColumn.sorter = column.sorter;
-            }
-            if (column.editComponent === 'InputNumber') {
-              if (0) {
-                //根据输入的数字显示进度条
-                mColumn.editRender = ({ text }) => {
-                  return h(Progress, { percent: Number(text) });
-                };
-              }
-            }
-            if (column.customRender) {
-              const crlist = column.customRender;
-              mColumn.customRender = ({ record }) => {
-                for (const cr of crlist) {
-                  if (checkRecordByWhere(record, cr.where)) {
-                    const color = cr.color;
-                    const label = record[column.dataIndex];
-                    return h(Tag, { color }, () => label);
-                  }
-                }
-              };
-            }
-            aRet.push(mColumn);
-          }
-          return aRet;
-        };
-        const columns = fGetColumns(info.columns);
-        // 修改永久列设置
-        props.columns = columns;
-        setProps(props);
-        if (0) {
-          // 临时修改（重置列的时候会被还原）
-          setColumns(columns);
-        }
-        //tplConf.TableTitle.title = info.title;
-        for (const k in info.tplConf) {
-          tplConf[k] = deepMerge(tplConf[k], info.tplConf[k]);
-        }
-        tplConf.toolbars = (() => {
-          const aRet: any[] = [];
-          for (const toolbar of info.toolbars) {
-            aRet.push({
-              title: toolbar.title,
-              click: () => {
-                clickToolbar.call(this, toolbar);
-              },
-            });
-          }
-          return aRet;
-        })();
-        createMessage.success({
-          content: `Info加载完成`,
-          key: 'fLoadInfo',
-          duration: 0.1,
-        });
-        reload();
-      };
-      fLoadInfo();
 
       function handleSuccess() {
         reload();
@@ -365,6 +224,8 @@
         }
         return aRet;
       };
+
+      const [registerDrawer, { openDrawer }] = useDrawer();
 
       const tplConf = {
         LastSearchInfo: {},
@@ -422,7 +283,45 @@
         },
       };
 
-      const [registerDrawer, { openDrawer }] = useDrawer();
+      // 加载表格信息
+      async function fLoadInfo() {
+        createMessage.loading({
+          content: `正在加载Info`,
+          key: 'fLoadInfo',
+          duration: 0,
+        });
+        const { info, props } = await fGetInfo(path);
+        setProps(props);
+        if (0) {
+          // 临时修改（重置列的时候会被还原）
+          setColumns(columns);
+        }
+        //tplConf.TableTitle.title = info.title;
+        for (const k in info.tplConf) {
+          tplConf[k] = deepMerge(tplConf[k], info.tplConf[k]);
+        }
+        tplConf.toolbars = (() => {
+          const aRet: any[] = [];
+          for (const toolbar of info.toolbars) {
+            aRet.push({
+              title: toolbar.title,
+              click: () => {
+                clickToolbar(toolbar);
+              },
+            });
+          }
+          return aRet;
+        })();
+        createMessage.success({
+          content: `Info加载完成`,
+          key: 'fLoadInfo',
+          duration: 0.1,
+        });
+
+        reload();
+      }
+
+      fLoadInfo();
 
       return {
         registerModal,
