@@ -22,7 +22,13 @@
           >{{ item.title }}</a-button
         >
       </template>
+      <template #bodyCell="{ column, record }">
+        <template v-if="column.key === 'action'">
+          <TableAction :actions="tplConf.actions(record)" />
+        </template>
+      </template>
     </BasicTable>
+    <XixiDrawer @register="registerDrawer" @success="handleSuccess" />
     <XixiModal @register="registerModal" @success="handleSuccess" />
     <ExpExcelModal
       @register="tplConf.ExpExcelModal.register"
@@ -43,11 +49,14 @@
     BasicColumn,
     BasicTableProps,
     FormSchema,
+    TableAction,
   } from '/@/components/Table';
   import TableTitle from '/@/components/Table/src/components/TableTitle.vue';
   import { useModal } from '/@/components/Modal';
   import XixiModal from './modal.vue';
   import { jsonToSheetXlsx, ExpExcelModal, ExportModalResult } from '/@/components/Excel';
+  import { useDrawer } from '@/components/Drawer';
+  import XixiDrawer from './drawer.vue';
 
   // 3: 导入Vben其他
   import { defHttp } from '/@/utils/http/axios';
@@ -76,7 +85,14 @@
 
   // 6: 最后导出组件
   export default defineComponent({
-    components: { BasicTable, TableTitle, XixiModal, ExpExcelModal },
+    components: {
+      BasicTable,
+      TableTitle,
+      TableAction,
+      XixiDrawer,
+      XixiModal,
+      ExpExcelModal,
+    },
     setup() {
       // 1: const
       const toolbars: TableConfigToolbar[] = [];
@@ -385,11 +401,33 @@
             });
           },
         },
+        actions(record: Recordable) {
+          const actions = [];
+          for (const oAction of tplConf.TableAction.actions) {
+            actions.push({
+              icon: oAction.icon,
+              onClick: () => {
+                if (oAction.action === 'view') {
+                  openDrawer(true, {
+                    record,
+                    isUpdate: true,
+                  });
+                  return;
+                }
+                alert(`action=${oAction.action}`);
+              },
+            });
+          }
+          return actions;
+        },
       };
+
+      const [registerDrawer, { openDrawer }] = useDrawer();
 
       return {
         registerModal,
         registerTable,
+        registerDrawer,
         handleEditEnd,
         handleEditCancel,
         beforeEditSubmit,
