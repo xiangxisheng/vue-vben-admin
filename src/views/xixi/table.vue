@@ -270,6 +270,7 @@
               onClick: () => {
                 if (oAction.action === 'view') {
                   openDrawer(true, {
+                    columns: tplConf.info.columns,
                     record,
                     isUpdate: true,
                   });
@@ -290,11 +291,13 @@
           key: 'fLoadInfo',
           duration: 0,
         });
+
         const { info, props } = await fGetInfo(path);
+        tplConf.info = info;
         setProps(props);
         if (0) {
           // 临时修改（重置列的时候会被还原）
-          setColumns(columns);
+          setColumns(props.columns);
         }
         //tplConf.TableTitle.title = info.title;
         for (const k in info.tplConf) {
@@ -312,6 +315,7 @@
           }
           return aRet;
         })();
+
         createMessage.success({
           content: `Info加载完成`,
           key: 'fLoadInfo',
